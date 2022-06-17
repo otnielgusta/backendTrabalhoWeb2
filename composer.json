@@ -1,0 +1,33 @@
+{
+    "name": "otnielgusta/backend-barbearia",
+    "description": "Backend api do aplicativo e site barbearia",
+    "minimum-stability": "stable",
+    "license": "proprietary",
+    "type": "library",
+    "autoload": {
+        "psr-4": {
+            "Controller\\": "Controller",
+            "Model\\": "Model",
+            "Dao\\": "Dao"
+        },
+        "files": [
+            "Config.php"
+        ]
+    },
+    "authors": [
+        {
+            "name": "Otniel Silva",
+            "email": "otnielsilvag4@gmail.com",
+            "role": "Developer"
+        }
+    ],
+    "config": {
+        "vendor-dir": "vendor"
+    },
+    "require": {
+        "firebase/php-jwt": "^6.2",
+        "slim/slim": "4.*",
+        "slim/psr7": "^1.5"
+       
+    }
+}
