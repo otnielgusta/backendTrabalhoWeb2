@@ -4,13 +4,14 @@ use \Controller\Env;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use FFI\Exception;
+use Throwable;
 
 class Authenticate{
 
     public static function genJWT($payload){
         $key = Env::SECRET_KEY();
         $time = time();
-        $expiration = $time ;
+        $expiration = $time + 60 * 60;
         $payload['exp'] = $expiration;
        
         $jwt = JWT::encode($payload, $key, 'HS256');
@@ -21,13 +22,16 @@ class Authenticate{
     public static function decodeJWT($jwt){
         $key = Env::SECRET_KEY();
         try {
-            return JWT::decode($jwt, new Key($key, 'HS256'));
-
-        } catch (\Firebase\JWT\ExpiredException  $e) {
-            http_response_code(401);
-            return json_encode([
-                "msg" => "Token expirado"
-            ]);
+            $token = JWT::decode($jwt, new Key($key, 'HS256'));
+            return $token;
+        } catch (Throwable $e) {
+            return $e; 
+        }
+        catch (\Firebase\JWT\ExpiredException $e) {
+            return $e;
+            
+        } catch (\Firebase\JWT\SignatureInvalidException $e) {
+            return $e;
         }
     }
 
@@ -35,10 +39,17 @@ class Authenticate{
 
         $key = Env::SECRET_KEY();
         try {
-            return JWT::decode($jwt, new Key($key, 'HS256'));
+            JWT::decode($jwt, new Key($key, 'HS256'));
+            return true;
 
-        } catch (Exception $e) {
-            echo $e; 
+        } catch (Throwable $e) {
+            return $e; 
+        }
+        catch (\Firebase\JWT\ExpiredException $e) {
+            return $e;
+            
+        } catch (\Firebase\JWT\SignatureInvalidException $e) {
+            return $e;
         }
     }
 
