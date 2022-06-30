@@ -28,6 +28,14 @@ $app->get('/', function ($request, $response, $args) {
 });
 
 $app->get('/lista-horarios',function ($request, $response, $args) {
+    $paramsJson = json_encode($request->getQueryParams());
+    $params = json_decode($paramsJson);
+    if($params->id && $params->data){
+        $id = $params->id;
+        $data = $params->data;
+    }else{
+        return $response->withStatus(404);
+    }
     $headersJson = json_encode($request->getHeaders());
     $headers = json_decode($headersJson);
     if ($headers->authorization) {
@@ -55,7 +63,7 @@ $app->get('/lista-horarios',function ($request, $response, $args) {
         
         if ($validacao == true) {
             $controller = new CabelereiroController();
-            $result = $controller->buscaHorarios(id: '1', data:'2022-06-12');
+            $result = $controller->buscaHorarios(id: $id, data:$data);
             
             if (count($result) > 0) {
                 $response->getBody()->write(json_encode($result));
