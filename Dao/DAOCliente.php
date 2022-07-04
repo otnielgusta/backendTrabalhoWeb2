@@ -32,6 +32,7 @@ class DAOCliente{
         $usuario = $pst->fetch(PDO::FETCH_ASSOC);
         return $usuario;
     }
+    
     public function getCliente($id) : Cliente{
         $pst = Conexao::getPreparedStatement('select id, nome, email, foto from cliente where id = ?;');
         $pst -> bindValue(1, $id);

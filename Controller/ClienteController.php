@@ -38,9 +38,6 @@ class ClienteController
         catch(\Throwable $th){
             return $th;
         }
-
-       
-        
     }
 
     public static function cadastro(Cliente $cliente, string $senha){

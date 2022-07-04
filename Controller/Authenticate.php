@@ -9,7 +9,7 @@ use Throwable;
 class Authenticate{
 
     public static function genJWT($payload){
-        $key = Env::SECRET_KEY();
+        $key = "otniellindo";
         $time = time();
         $expiration = $time + 60 * 60;
         $payload['exp'] = $expiration;
@@ -19,11 +19,13 @@ class Authenticate{
         return $jwt;
     }
 
-    public static function decodeJWT($jwt){
-        $key = Env::SECRET_KEY();
+    public function decodeJWT($jwt){
+        $key = "otniellindo";
         try {
+
             $token = JWT::decode($jwt, new Key($key, 'HS256'));
             return $token;
+
         } catch (Throwable $e) {
             return $e; 
         }
@@ -37,7 +39,7 @@ class Authenticate{
 
     public static function validateJWT($jwt){
 
-        $key = Env::SECRET_KEY();
+        $key = "otniellindo";
         try {
             JWT::decode($jwt, new Key($key, 'HS256'));
             return true;
@@ -49,6 +51,8 @@ class Authenticate{
             return $e;
             
         } catch (\Firebase\JWT\SignatureInvalidException $e) {
+            return $e;
+        } catch (\Firebase\JWT\JWT $e) {
             return $e;
         }
     }

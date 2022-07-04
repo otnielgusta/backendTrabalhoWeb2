@@ -30,15 +30,15 @@ class DAOCabelereiro
             
             union
             
-            select jd.id as id, 'tarde' as parte, date_format(hj2.horario, '%H:%i') as horario from jornada_diaria as jd
-            inner join horario_jornada as hj2 on hj2.id = jd.horario_jornada_id
-            where jd.cabelereiro_id = ? and jd.dia_semana = dayofweek(?) and (hour(hj2.horario) > 12 and  hour(hj2.horario) < 18)
+            select hj.id as id, 'tarde' as parte, date_format(hj.horario, '%H:%i') as horario from jornada_diaria as jd
+            inner join horario_jornada as hj on hj.id = jd.horario_jornada_id
+            where jd.cabelereiro_id = ? and jd.dia_semana = dayofweek(?) and (hour(hj.horario) > 12 and  hour(hj.horario) < 18)
             
             union
             
-            select jd.id as id, 'noite' as parte, date_format(hj2.horario, '%H:%i') as horario from jornada_diaria as jd
-            inner join horario_jornada as hj2 on hj2.id = jd.horario_jornada_id
-            where jd.cabelereiro_id = ? and jd.dia_semana = dayofweek(?) and hour(hj2.horario) > 18
+            select hj.id as id, 'noite' as parte, date_format(hj.horario, '%H:%i') as horario from jornada_diaria as jd
+            inner join horario_jornada as hj on hj.id = jd.horario_jornada_id
+            where jd.cabelereiro_id = ? and jd.dia_semana = dayofweek(?) and hour(hj.horario) > 18
 
             ;");
         $pst->bindValue(1, $id);
@@ -50,5 +50,28 @@ class DAOCabelereiro
         $pst->execute();
         $lista = $pst->fetchAll(PDO::FETCH_ASSOC);
         return $lista;
+    }
+    public function login($usuario){
+        $pst = Conexao::getPreparedStatement('select id, senha from cabelereiro where email = ?;');
+        $pst -> bindValue(1, $usuario);
+        $pst->execute();
+        $usuario = $pst->fetch(PDO::FETCH_ASSOC);
+        return $usuario;
+    }
+
+    public function getCabelereiro($id) : Cabelereiro{
+        $pst = Conexao::getPreparedStatement('select id, nome, email, foto, horario_string, dias_string from cabelereiro where id = ?;');
+        $pst -> bindValue(1, $id);
+        $pst->execute();
+        $result = $pst->fetch(PDO::FETCH_ASSOC);
+
+        $cabelereiro = new Cabelereiro();
+        $cabelereiro->id = $result['id'];
+        $cabelereiro->nome = $result['nome'];
+        $cabelereiro->email = $result['email'];
+        $cabelereiro->foto = $result['foto'];
+        $cabelereiro->horario = $result['horario_string'];
+        $cabelereiro->dias = $result['dias_string'];
+        return $cabelereiro;
     }
 }

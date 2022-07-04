@@ -17,7 +17,7 @@ class Cabelereiro{
             "nome" => $this->nome,
             "email" => $this->email,
             "foto" => $this->foto,
-            "foto" => $this->horario,
+            "horario" => $this->horario,
             "dias" => $this->dias
         ];
 
@@ -49,7 +49,7 @@ class Cabelereiro{
              "nome" => $this->nome,
              "email" => $this->email,
              "foto" => $this->foto,
-             "horario" => $this->foto,
+             "horario" => $this->horario,
              "dias" => $this->dias
          ];
  
