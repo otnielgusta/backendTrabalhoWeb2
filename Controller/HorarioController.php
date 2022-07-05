@@ -39,4 +39,20 @@ class HorarioController
             throw $th;
         }
     }
+
+    public function listaTodosHorarios()
+    {
+
+        try {
+            $daoHorario = new DAOHorario();
+
+            $horarios = $daoHorario->listaTodosHorarios();
+            $response = [
+                "horarios" => $horarios
+            ];
+            return $response;
+        } catch (\Throwable $th) {
+            throw $th;
+        }
+    }
 }

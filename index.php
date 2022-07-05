@@ -20,38 +20,57 @@ $app = AppFactory::create();
 $app->addRoutingMiddleware();
 $errorMiddleware = $app->addErrorMiddleware(true, true, true);
 
-$app->get('/', function ($request, $response, $args) {
-   // $headersJson = json_encode($request->getHeaders());
+$app->get('/geraid', function ($request, $response, $args) {
+    // $headersJson = json_encode($request->getHeaders());
     //$headers = json_decode($headersJson);
     //$headersJson = json_encode($request->getHeaders());
     //$headers = json_decode($headersJson);
     //$auth = new Authenticate();
 
-   // $validacao = $auth->decodeJWT(jwt: $headers->authorization[0]);
+    // $validacao = $auth->decodeJWT(jwt: $headers->authorization[0]);
+    //$response->getBody()->write(json_encode($validacao));
+    //return $response->withHeader('Content-Type', 'application/json');
+
+    $headers = [
+        "id" => uniqid(),
+        "senha" => md5("senha"),
+    ];
+    $response->getBody()->write(json_encode($headers));
+
+    return $response->withHeader('Content-Type', 'application/json');
+});
+
+$app->get('/', function ($request, $response, $args) {
+    // $headersJson = json_encode($request->getHeaders());
+    //$headers = json_decode($headersJson);
+    //$headersJson = json_encode($request->getHeaders());
+    //$headers = json_decode($headersJson);
+    //$auth = new Authenticate();
+
+    // $validacao = $auth->decodeJWT(jwt: $headers->authorization[0]);
     //$response->getBody()->write(json_encode($validacao));
     //return $response->withHeader('Content-Type', 'application/json');
 
     //$headers = [
     //    "id"=> uniqid(),
     //    "senha"=> md5("senha"),
-   // ];
-   // $response->getBody()->write(json_encode($headers));
+    // ];
+    // $response->getBody()->write(json_encode($headers));
     $json = $request->getBody();
     $data = json_decode($json);
 
     $dao = new DAOHorario();
     $dao->adicionarJornada($data->cabelereiro, $data->dia, $data->horario);
     return $response->withHeader('Content-Type', 'application/json');
-
 });
 
-$app->get('/lista-horarios',function ($request, $response, $args) {
+$app->get('/lista-horarios', function ($request, $response, $args) {
     $paramsJson = json_encode($request->getQueryParams());
     $params = json_decode($paramsJson);
-    if($params->id && $params->data){
+    if ($params->id && $params->data) {
         $id = $params->id;
         $data = $params->data;
-    }else{
+    } else {
         return $response->withStatus(404);
     }
     $headersJson = json_encode($request->getHeaders());
@@ -69,7 +88,7 @@ $app->get('/lista-horarios',function ($request, $response, $args) {
         }
         if ($validacao instanceof \Firebase\JWT\SignatureInvalidException) {
             $response->getBody()->write(json_encode([
-                "token"=> json_decode($headers->authorization[0]),
+                "token" => json_decode($headers->authorization[0]),
                 "msg" => "Erro de assinatura"
             ]));
             return $response->withStatus(401);
@@ -78,25 +97,53 @@ $app->get('/lista-horarios',function ($request, $response, $args) {
             $response->getBody()->write($validacao->getMessage());
             return $response->withStatus(500);
         }
-        
+
         if ($validacao == true) {
             $controller = new CabelereiroController();
-            $result = $controller->buscaHorarios(id: $id, data:$data);
-            
+            $result = $controller->buscaHorarios(id: $id, data: $data);
+
             if (count($result) > 0) {
                 $response->getBody()->write(json_encode($result));
                 return $response->withHeader('Content-Type', 'application/json');
-            }else{
+            } else {
                 return $response->withStatus(404);
             }
         }
     } else {
         return $response->withStatus(401);
     }
-   
 });
 
 //cabelereiro
+
+$app->post('/cadastro-cabelereiro', function ($request, $response, $args) {
+
+    $json = $request->getBody();
+    $data = json_decode($json);
+
+    $controller = new CabelereiroController();
+
+    $result = $controller->cadastro(
+        $data->nome,
+        $data->email,
+        $data->senha,
+        $data->jornada_semanal,
+        $data->jornada_diaria,
+        $data->horario_string,
+        $data->dias_string
+    );
+    if ($result instanceof Throwable) {
+        $erro = [
+            "erro" => $result->getMessage()
+        ];
+        $response->getBody()->write(json_encode($erro));
+        return $response->withStatus(500);
+    }
+    if(!$result){
+        return $response->withStatus(500);
+    }
+    return $response->withHeader('Content-Type', 'application/json');
+});
 
 $app->post('/login-cabelereiro', function ($request, $response, $args) {
 
@@ -134,7 +181,7 @@ $app->get('/lista-cabelereiros', function ($request, $response, $args) {
         }
         if ($validacao instanceof \Firebase\JWT\SignatureInvalidException) {
             $response->getBody()->write(json_encode([
-                "token"=> json_decode($headers->authorization[0]),
+                "token" => json_decode($headers->authorization[0]),
                 "msg" => "Erro de assinatura"
             ]));
             return $response->withStatus(401);
@@ -149,24 +196,21 @@ $app->get('/lista-cabelereiros', function ($request, $response, $args) {
             if (count($result) > 0) {
                 $response->getBody()->write(json_encode($result));
                 return $response->withHeader('Content-Type', 'application/json');
-            }else{
+            } else {
                 return $response->withStatus(404);
             }
         }
     } else {
         return $response->withStatus(401);
     }
-
-
- 
 });
 
-$app->get('/lista-horarios-marcados',function ($request, $response, $args) {
+$app->get('/lista-horarios-marcados', function ($request, $response, $args) {
     $paramsJson = json_encode($request->getQueryParams());
     $params = json_decode($paramsJson);
-    if($params->data){
+    if ($params->data) {
         $data = $params->data;
-    }else{
+    } else {
         return $response->withStatus(404);
     }
     $headersJson = json_encode($request->getHeaders());
@@ -183,7 +227,7 @@ $app->get('/lista-horarios-marcados',function ($request, $response, $args) {
         }
         if ($validacao instanceof \Firebase\JWT\SignatureInvalidException) {
             $response->getBody()->write(json_encode([
-                "token"=> json_decode($headers->authorization[0]),
+                "token" => json_decode($headers->authorization[0]),
                 "msg" => "Erro de assinatura"
             ]));
             return $response->withStatus(401);
@@ -192,22 +236,21 @@ $app->get('/lista-horarios-marcados',function ($request, $response, $args) {
             $response->getBody()->write($validacao->getMessage());
             return $response->withStatus(500);
         }
-        
+
         if ($validacao->id) {
             $controller = new HorarioController();
             $result = $controller->listaHorariosMarcados(id: $validacao->id, data: $data);
-            
+
             if (count($result) > 0) {
                 $response->getBody()->write(json_encode($result));
                 return $response->withHeader('Content-Type', 'application/json');
-            }else{
+            } else {
                 return $response->withStatus(404);
             }
         }
     } else {
         return $response->withStatus(401);
     }
-   
 });
 
 //cliente
@@ -276,7 +319,7 @@ $app->post('/agendar-horario', function ($request, $response, $args) {
     $horario->data = $data->data;
     $horario->cabelereiro_id = $data->cabelereiro_id;
     $horario->horario_cabelereiro = $data->horario_cabelereiro;
-    
+
     if ($headers->authorization) {
         $auth = new Authenticate();
         $validacao = $auth->decodeJWT(jwt: $headers->authorization[0]);
@@ -289,7 +332,7 @@ $app->post('/agendar-horario', function ($request, $response, $args) {
         }
         if ($validacao instanceof \Firebase\JWT\SignatureInvalidException) {
             $response->getBody()->write(json_encode([
-                "token"=> json_decode($headers->authorization[0]),
+                "token" => json_decode($headers->authorization[0]),
                 "msg" => "Erro de assinatura"
             ]));
             return $response->withStatus(401);
@@ -316,19 +359,30 @@ $app->post('/agendar-horario', function ($request, $response, $args) {
             if ($result["message"]) {
                 if ($result["message"] == 'ok') {
                     return $response->withStatus(201);
-                }
-                else{
-                echo "erro pq deu erro";
+                } else {
+                    echo "erro pq deu erro";
 
                     return $response->withStatus(500);
                 }
             }
             return $response->withHeader('Content-Type', 'application/json');
-
         }
     } else {
         return $response->withStatus(401);
     }
 });
 
+$app->get('/lista-todos-horarios', function ($request, $response, $args) {
+
+
+    $controller = new HorarioController();
+    $result = $controller->listaTodosHorarios();
+
+    if (count($result) > 0) {
+        $response->getBody()->write(json_encode($result));
+        return $response->withHeader('Content-Type', 'application/json');
+    } else {
+        return $response->withStatus(404);
+    }
+});
 $app->run();

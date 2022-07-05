@@ -74,4 +74,20 @@ class DAOCabelereiro
         $cabelereiro->dias = $result['dias_string'];
         return $cabelereiro;
     }
+    public function cadastro($id, $nome, $email, $senha, $horario_string, $dias_string){
+        
+        $pst = Conexao::getPreparedStatement("
+        insert into cabelereiro(id, nome, email, senha, horario_string, dias_string)
+        values(?, ?, ?, ?, ?, ?);
+         
+         ");
+        $pst -> bindValue(1, $id);
+        $pst -> bindValue(2, $nome);
+        $pst -> bindValue(3, $email);
+        $pst -> bindValue(4, $senha);
+        $pst -> bindValue(5, $horario_string);
+        $pst -> bindValue(6, $dias_string);
+        $resultado = $pst->execute();
+        return $resultado;
+    }
 }
