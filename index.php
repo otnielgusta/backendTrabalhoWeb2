@@ -14,7 +14,7 @@ use Model\Horario;
 
 require_once './Controller/ClienteController.php';
 
-require __DIR__ . './vendor/autoload.php';
+require __DIR__ . '/vendor/autoload.php';
 
 $app = AppFactory::create();
 $app->addRoutingMiddleware();
@@ -315,14 +315,14 @@ $app->post('/agendar-horario', function ($request, $response, $args) {
 
     $controller = new HorarioController();
     $horario = new Horario();
-    $horario->id = md5(uniqid());
+    $horario->id = uniqid();
     $horario->data = $data->data;
     $horario->cabelereiro_id = $data->cabelereiro_id;
     $horario->horario_cabelereiro = $data->horario_cabelereiro;
 
     if ($headers->authorization) {
         $auth = new Authenticate();
-        $validacao = $auth->decodeJWT(jwt: $headers->authorization[0]);
+        $validacao = $auth->decodeJWT(jwt: ($headers->authorization[0]));
 
         if ($validacao instanceof \Firebase\JWT\ExpiredException) {
             $response->getBody()->write(json_encode([
