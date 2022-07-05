@@ -7,7 +7,7 @@ use PDOStatement;
 
 class Conexao
 {
-  private static $dsn = 'mysql:host=localhost;dbname=barbearia;port=3306;';
+  private static $dsn = 'mysql:host=localhost;dbname=barbearia2;port=3306;';
   private static $usuario = 'root';
   private static $senha = 'contrabaixo';
   private static $conexao = null;
