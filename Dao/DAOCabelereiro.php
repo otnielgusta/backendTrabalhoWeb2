@@ -59,6 +59,55 @@ class DAOCabelereiro
         return $usuario;
     }
 
+    public function atualizaFoto($id, $foto){
+        $pst = Conexao::getPreparedStatement("
+        update cabelereiro set foto = ? where id = ?
+         ");
+        $pst -> bindValue(1, $foto);
+        $pst -> bindValue(2, $id);
+        $resultado = $pst->execute();
+        return $resultado;
+    }
+
+    public function atualizaCabelereiroComSenha($id,  $email, $nome, $senha){
+        $pst = Conexao::getPreparedStatement("
+        update cabelereiro set  nome = ?, email = ?, senha = ? where id = ?
+         ");
+        $pst -> bindValue(1, $nome);
+        $pst -> bindValue(2, $email);
+        $pst -> bindValue(3, $senha);
+        $pst -> bindValue(4, $id);
+        $resultado = $pst->execute();
+        return $resultado;
+    }
+
+    public function atualizaCabelereiroSemSenha($id, $email, $nome,){
+        $pst = Conexao::getPreparedStatement("
+        update cabelereiro set  nome = ?, email = ?  where id = ?
+         ");
+        $pst -> bindValue(1, $nome);
+        $pst -> bindValue(2, $email);
+        $pst -> bindValue(3, $id);
+        $resultado = $pst->execute();
+        return $resultado;
+    }
+
+    public function pegaEmail($id){
+        $pst = Conexao::getPreparedStatement('select email from cabelereiro where id = ?;');
+        $pst -> bindValue(1, $id);
+        $pst->execute();
+        $usuario = $pst->fetch(PDO::FETCH_ASSOC);
+        return $usuario;
+    }
+
+    public function verificaEmail($email){
+        $pst = Conexao::getPreparedStatement('select count(id) as count from cabelereiro where email = ?;');
+        $pst -> bindValue(1, $email);
+        $pst->execute();
+        $usuario = $pst->fetch(PDO::FETCH_ASSOC);
+        return $usuario['count'] > 0;
+    }
+
     public function getCabelereiro($id) : Cabelereiro{
         $pst = Conexao::getPreparedStatement('select id, nome, email, foto, horario_string, dias_string from cabelereiro where id = ?;');
         $pst -> bindValue(1, $id);

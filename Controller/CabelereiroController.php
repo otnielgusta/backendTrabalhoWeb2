@@ -49,23 +49,120 @@ class CabelereiroController
             $dao = new DAOCabelereiro();
             $dao_horario = new DAOHorario();
             $id = uniqid();
-
+            $verify_email = $dao->verificaEmail($email);
+            if ($verify_email) {
+                return [
+                    "message" => "Este E-mail ja está sendo utilizado",
+                    "status" => "error"
+                ];
+            }
             $senha_criptografada = md5($senha);
             $result = $dao->cadastro($id, $nome, $email, $senha_criptografada, $horario_string, $dias_string);
             if (!$result) {
-                return false;
+                return [
+                    "message" => "Ocorreu um erro ao cadastar o usuário",
+                    "status" => "error"
+                ];
             }
 
             $js = $dao_horario->criaJornadaSemanal($id, $jornada_semanal);
             if (!$js) {
-                return false;
+
+                return [
+                    "message" => "Ocorreu um erro ao cadastar o a jornada semanal",
+                    "status" => "error"
+                ];
             }
 
             $jd = $dao_horario->criaJornadaDiaria($id, $jornada_diaria, $jornada_semanal);
             if (!$jd) {
-                return false;
+                return [
+                    "message" => "Ocorreu um erro ao cadastar o a jornada diária",
+                    "status" => "error"
+                ];
             }
-            return true;
+            return [
+                "message" => "ok",
+                "status" => "success"
+            ];
+        } catch (\Throwable $th) {
+            throw $th;
+        }
+    }
+
+    public function atualizaCabelereiro($id, $email, $nome, $senha)
+    {
+        try {
+
+            $dao = new DAOCabelereiro();
+
+            $email_igual =  $dao->pegaEmail($id);
+            if ($email_igual["email"] === $email) {
+                $result = $dao->login(usuario: $email);
+                if (!$result) {
+                    return [
+                        "message" => "Ocorreu um erro ao atualizar usuario login",
+                        "status" => "error"
+                    ];
+                }
+            } else {
+
+                $verify_email = $dao->verificaEmail($email);
+                if ($verify_email) {
+                    return [
+                        "message" => "Este E-mail ja está sendo utilizado",
+                        "status" => "error"
+                    ];
+                }
+            }
+
+
+
+            if ($senha == "" || $senha == null) {
+                $response = $dao->atualizaCabelereiroSemSenha($id, $email, $nome);
+            } else {
+
+                if (!Authenticate::validatePassword(appPassword: $senha, bdPassword: $result['senha'])) {
+                    $senha_criptografada = md5($senha);
+                } else {
+
+                    $senha_criptografada = $senha;
+                }
+                $response = $dao->atualizaCabelereiroComSenha($id, $email, $nome, $senha_criptografada);
+            }
+
+            if (!$response) {
+                return [
+                    "message" => "Ocorreu um erro ao atualizar usuario atualização",
+                    "status" => "error"
+                ];
+            }
+            return [
+                "message" => "ok",
+                "status" => "success"
+            ];
+        } catch (\Throwable $th) {
+            throw $th;
+        }
+    }
+
+    public function atualizaFoto($id, $foto)
+    {
+        try {
+
+            $dao = new DAOCabelereiro();
+
+            $response = $dao->atualizaFoto($id, $foto);
+            if (!$response) {
+                return [
+                    "message" => "Ocorreu um erro ao salvar foto",
+                    "status" => "error"
+                ];
+            }
+            return [
+                "message" => "ok",
+                "status" => "success"
+            ];
         } catch (\Throwable $th) {
             throw $th;
         }
@@ -92,6 +189,28 @@ class CabelereiroController
 
             $response = $dao->buscaHorarios($id, $data);
             return $response;
+        } catch (\Throwable $th) {
+            //throw $th;
+        }
+    }
+
+    public function getCabelereiro($id)
+    {
+        try {
+
+            $dao = new DAOCabelereiro();
+
+            $response = $dao->getCabelereiro($id);
+            if ($response) {
+                return [
+                    "status" => "success",
+                    "user" => $response->toObjWithoutId()
+                ];
+            } else {
+                return [
+                    "status" => "error",
+                ];
+            }
         } catch (\Throwable $th) {
             //throw $th;
         }

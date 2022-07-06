@@ -53,7 +53,7 @@ class Cabelereiro{
              "dias" => $this->dias
          ];
  
-     return $obj;
+     return json_encode($obj);
  
      }
 }

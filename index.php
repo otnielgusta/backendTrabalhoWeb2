@@ -64,6 +64,40 @@ $app->get('/', function ($request, $response, $args) {
     return $response->withHeader('Content-Type', 'application/json');
 });
 
+$app->get('/auth', function ($request, $response, $args) {
+    $headersJson = json_encode($request->getHeaders());
+    $headers = json_decode($headersJson);
+
+    if ($headers->authorization) {
+        $jwt = $headers->authorization[0];
+        $validacao = Authenticate::validateJWT(jwt: $jwt);
+        if ($validacao instanceof \Firebase\JWT\ExpiredException) {
+            $response->getBody()->write(json_encode([
+                "msg" => "Token expirado"
+            ]));
+            return $response->withStatus(401);
+        }
+        if ($validacao instanceof \Firebase\JWT\SignatureInvalidException) {
+            $response->getBody()->write(json_encode([
+                "msg" => "Erro de assinatura"
+            ]));
+            return $response->withStatus(401);
+        }
+        if ($validacao instanceof Throwable) {
+            $response->getBody()->write($validacao->getMessage());
+            return $response->withStatus(500);
+        }
+        if ($validacao == true) {
+            return $response->withStatus(200);
+        }
+    }
+    $response->getBody()->write(json_encode([
+        "msg" => "Você precisa estar logado"
+    ]));
+    return $response->withStatus(401);
+});
+
+
 $app->get('/lista-horarios', function ($request, $response, $args) {
     $paramsJson = json_encode($request->getQueryParams());
     $params = json_decode($paramsJson);
@@ -116,6 +150,136 @@ $app->get('/lista-horarios', function ($request, $response, $args) {
 
 //cabelereiro
 
+$app->post('/atualiza-foto-cabelereiro', function ($request, $response, $args) {
+    $headersJson = json_encode($request->getHeaders());
+    $headers = json_decode($headersJson);
+
+    $json = $request->getBody();
+    $data = json_decode($json);
+
+    if ($headers->authorization) {
+        $auth = new Authenticate();
+        $jwt = $headers->authorization[0];
+        $validacao = $auth->decodeJWT(jwt: json_decode($jwt));
+
+        if ($validacao instanceof \Firebase\JWT\ExpiredException) {
+            $response->getBody()->write(json_encode([
+                "msg" => "Token expirado"
+            ]));
+            return $response->withStatus(401);
+        }
+        if ($validacao instanceof \Firebase\JWT\SignatureInvalidException) {
+            $response->getBody()->write(json_encode([
+                "token" => json_decode($headers->authorization[0]),
+                "msg" => "Erro de assinatura"
+            ]));
+            return $response->withStatus(401);
+        }
+        if ($validacao instanceof Throwable) {
+            $response->getBody()->write($validacao->getMessage());
+            return $response->withStatus(500);
+        }
+
+        if ($validacao->id) {
+            $id = $validacao->id;
+            $controller = new CabelereiroController();
+            $result = $controller->atualizaFoto(id: $id, foto: $data->foto,);
+            if ($result instanceof Throwable) {
+                $erro = [
+                    "message" => $result->getMessage()
+                ];
+                $response->getBody()->write(json_encode($erro));
+                return $response->withStatus(500);
+            }
+
+            if ($result["message"]) {
+                if ($result["status"] == "error") {
+                    $jsonResponse = json_encode($result);
+                    $response->getBody()->write($jsonResponse);
+                    return $response->withStatus(500);
+                } else if ($result["status"] == "success") {
+                    $jsonResponse = json_encode($result);
+                    $response->getBody()->write($jsonResponse);
+                    return $response->withStatus(202);
+                }
+            }
+            if (!$result) {
+                $result['message'] = 'Ocorreu um erro';
+                $jsonResponse = json_encode($result);
+                $response->getBody()->write($jsonResponse);
+                return $response->withStatus(500);
+            }
+        }
+    }
+
+    return $response->withHeader('Content-Type', 'application/json');
+});
+
+
+$app->post('/atualiza-cabelereiro', function ($request, $response, $args) {
+    $headersJson = json_encode($request->getHeaders());
+    $headers = json_decode($headersJson);
+
+    $json = $request->getBody();
+    $data = json_decode($json);
+
+    if ($headers->authorization) {
+        $auth = new Authenticate();
+        $jwt = $headers->authorization[0];
+        $validacao = $auth->decodeJWT(jwt: json_decode($jwt));
+
+        if ($validacao instanceof \Firebase\JWT\ExpiredException) {
+            $response->getBody()->write(json_encode([
+                "msg" => "Token expirado"
+            ]));
+            return $response->withStatus(401);
+        }
+        if ($validacao instanceof \Firebase\JWT\SignatureInvalidException) {
+            $response->getBody()->write(json_encode([
+                "token" => json_decode($headers->authorization[0]),
+                "msg" => "Erro de assinatura"
+            ]));
+            return $response->withStatus(401);
+        }
+        if ($validacao instanceof Throwable) {
+            $response->getBody()->write($validacao->getMessage());
+            return $response->withStatus(500);
+        }
+
+        if ($validacao->id) {
+            $id = $validacao->id;
+            $controller = new CabelereiroController();
+            $result = $controller->atualizaCabelereiro($id, $data->email, $data->nome, $data->senha);
+            if ($result instanceof Throwable) {
+                $erro = [
+                    "message" => $result->getMessage()
+                ];
+                $response->getBody()->write(json_encode($erro));
+                return $response->withStatus(500);
+            }
+
+            if ($result["message"]) {
+                if ($result["status"] == "error") {
+                    $jsonResponse = json_encode($result);
+                    $response->getBody()->write($jsonResponse);
+                    return $response->withStatus(500);
+                } else if ($result["status"] == "success") {
+                    $jsonResponse = json_encode($result);
+                    $response->getBody()->write($jsonResponse);
+                    return $response->withStatus(202);
+                    return $response->withHeader('Content-Type', 'application/json');
+                }
+            }
+            if (!$result) {
+                $result['message'] = 'Ocorreu um erro';
+                $jsonResponse = json_encode($result);
+                $response->getBody()->write($jsonResponse);
+                return $response->withStatus(500);
+            }
+        }
+    }
+});
+
 $app->post('/cadastro-cabelereiro', function ($request, $response, $args) {
 
     $json = $request->getBody();
@@ -129,17 +293,41 @@ $app->post('/cadastro-cabelereiro', function ($request, $response, $args) {
         $data->senha,
         $data->jornada_semanal,
         $data->jornada_diaria,
-        $data->horario_string,
-        $data->dias_string
+        $data->horario_texto,
+        $data->data_texto
     );
     if ($result instanceof Throwable) {
         $erro = [
-            "erro" => $result->getMessage()
+            "message" => $result->getMessage()
         ];
         $response->getBody()->write(json_encode($erro));
         return $response->withStatus(500);
     }
-    if(!$result){
+    if ($result["message"]) {
+        if ($result["status"] == "error") {
+            if ($result["message"] == 'Este E-mail ja está sendo utilizado') {
+                $jsonResponse = json_encode($result);
+                $response->getBody()->write($jsonResponse);
+                return $response->withStatus(409);
+            } else if (
+                $result["message"] == 'Ocorreu um erro ao cadastar o usuário' ||
+                $result["message"] == 'Ocorreu um erro ao cadastar o a jornada semanal' ||
+                $result["message"] == 'Ocorreu um erro ao cadastar o a jornada diária'
+            ) {
+                $jsonResponse = json_encode($result);
+                $response->getBody()->write($jsonResponse);
+                return $response->withStatus(500);
+            }
+        } else if ($result["status"] == "success") {
+            $jsonResponse = json_encode($result);
+            $response->getBody()->write($jsonResponse);
+            return $response->withStatus(201);
+        }
+    }
+    if (!$result) {
+        $result['message'] = 'Ocorreu um erro';
+        $jsonResponse = json_encode($result);
+        $response->getBody()->write($jsonResponse);
         return $response->withStatus(500);
     }
     return $response->withHeader('Content-Type', 'application/json');
@@ -246,6 +434,61 @@ $app->get('/lista-horarios-marcados', function ($request, $response, $args) {
                 return $response->withHeader('Content-Type', 'application/json');
             } else {
                 return $response->withStatus(404);
+            }
+        }
+    } else {
+        return $response->withStatus(401);
+    }
+});
+
+$app->get('/busca-cabelereiro', function ($request, $response, $args) {
+
+    $headersJson = json_encode($request->getHeaders());
+    $headers = json_decode($headersJson);
+    if ($headers->authorization) {
+        $auth = new Authenticate();
+        $jwt = $headers->authorization[0];
+        $validacao = $auth->decodeJWT(jwt: json_decode($jwt));
+        if ($validacao instanceof \Firebase\JWT\ExpiredException) {
+            $response->getBody()->write(json_encode([
+                "msg" => "Token expirado"
+            ]));
+            return $response->withStatus(401);
+        }
+        if ($validacao instanceof \Firebase\JWT\SignatureInvalidException) {
+            $response->getBody()->write(json_encode([
+                "token" => json_decode($headers->authorization[0]),
+                "msg" => "Erro de assinatura"
+            ]));
+            return $response->withStatus(401);
+        }
+        if ($validacao instanceof Throwable) {
+            $response->getBody()->write($validacao->getMessage());
+            return $response->withStatus(500);
+        }
+
+        if ($validacao->id) {
+            $controller = new CabelereiroController();
+            $result = $controller->getCabelereiro(id: $validacao->id);
+
+            if ($result instanceof Throwable) {
+                return $response->withStatus(500);
+            }
+
+            if ($result["status"]) {
+                if ($result["status"] == "error") {
+                    return $response->withStatus(500);
+                } else if ($result["status"] == "success") {
+                    $jsonResponse = json_encode($result);
+                    $response->getBody()->write($jsonResponse);
+                    return $response->withHeader('Content-Type', 'application/json');
+                }
+            }
+            if (!$result) {
+                $result['message'] = 'Ocorreu um erro';
+                $jsonResponse = json_encode($result);
+                $response->getBody()->write($jsonResponse);
+                return $response->withStatus(500);
             }
         }
     } else {

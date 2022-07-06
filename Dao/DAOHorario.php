@@ -111,12 +111,12 @@ class DAOHorario
 
     public function criaJornadaSemanal($id,  $jornada_semanal)
     {
-        $pst = Conexao::getPreparedStatement('
-        insert into jornada_semanal values(?, ?);
-         
-         ');
-        foreach ($jornada_semanal as $key => $value) {
 
+        foreach ($jornada_semanal as $key => $value) {
+            $pst = Conexao::getPreparedStatement('
+                insert into jornada_semanal values(?, ?);
+                 
+                 ');
             $pst->bindValue(1, $id);
             $pst->bindValue(2, $value);
             $resultado = $pst->execute();
@@ -125,6 +125,7 @@ class DAOHorario
                 return false;
             }
         }
+        return true;
     }
 
     public function criaJornadaDiaria($id,  $jornada_diaria, $jornada_semanal)
@@ -142,12 +143,12 @@ class DAOHorario
                 $pst->bindValue(3, $jornada_semanal[$i]);
                 $pst->bindValue(4, $jornada_diaria[$j]);
                 $resultado = $pst->execute();
-    
+
                 if (!$resultado) {
                     return false;
                 }
             }
         }
-       return true;
+        return true;
     }
 }
