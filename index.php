@@ -582,10 +582,8 @@ $app->post('/agendar-horario', function ($request, $response, $args) {
         }
         if ($validacao->id) {
             $horario->cliente_id = $validacao->id;
-            echo $horario->toJson();
 
             if (!$horario->todosCamposPreenchidos()) {
-                echo "erro dos campos";
                 return $response->withStatus(500);
             }
 
@@ -595,7 +593,6 @@ $app->post('/agendar-horario', function ($request, $response, $args) {
                     "erro" => $result->getMessage()
                 ];
                 $response->getBody()->write(json_encode($erro));
-                echo "erro de exception";
 
                 return $response->withStatus(500);
             }
@@ -603,7 +600,6 @@ $app->post('/agendar-horario', function ($request, $response, $args) {
                 if ($result["message"] == 'ok') {
                     return $response->withStatus(201);
                 } else {
-                    echo "erro pq deu erro";
 
                     return $response->withStatus(500);
                 }

@@ -50,7 +50,8 @@ class ClienteController
                 $result['message'] = 'Este E-mail ja está sendo utilizado';
                 return $result; 
             }
-            $wasReg = $dao->cadastro(cliente: $cliente, senha: $senha);
+            $senha_criptografada = md5($senha);
+            $wasReg = $dao->cadastro(cliente: $cliente, senha: $senha_criptografada);
             if ($wasReg) {
                 $result['message'] = 'ok';
             }
