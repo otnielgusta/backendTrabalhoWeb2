@@ -524,31 +524,233 @@ $app->post('/cadastro-cliente', function ($request, $response, $args) {
 
     $controller = new ClienteController();
     $cliente = new Cliente();
-    $cliente->id = md5(uniqid());
     $cliente->nome = $data->nome;
     $cliente->email = $data->email;
     $cliente->foto = "";
 
-    $result = $controller->cadastro(cliente: $cliente, senha: $data->senha);
+    $result = $controller->cadastro($data->nome,  $data->email, $data->senha);
     if ($result instanceof Throwable) {
         $erro = [
-            "erro" => $result->getMessage()
+            "message" => $result->getMessage()
         ];
         $response->getBody()->write(json_encode($erro));
         return $response->withStatus(500);
     }
     if ($result["message"]) {
-        if ($result["message"] == 'Este E-mail ja está sendo utilizado') {
+        if ($result["status"] == "error") {
+            if ($result["message"] == 'Este E-mail ja está sendo utilizado') {
+                $jsonResponse = json_encode($result);
+                $response->getBody()->write($jsonResponse);
+                return $response->withStatus(409);
+            } else if (
+                $result["message"] == 'Ocorreu um erro ao cadastar o usuário'
+
+            ) {
+                $jsonResponse = json_encode($result);
+                $response->getBody()->write($jsonResponse);
+                return $response->withStatus(500);
+            }
+        } else if ($result["status"] == "success") {
             $jsonResponse = json_encode($result);
             $response->getBody()->write($jsonResponse);
-            return $response->withStatus(401);
-        } else if ($result["message"] == 'ok') {
             return $response->withStatus(201);
         }
+    }
+    if (!$result) {
+        $result['message'] = 'Ocorreu um erro';
+        $jsonResponse = json_encode($result);
+        $response->getBody()->write($jsonResponse);
+        return $response->withStatus(500);
     }
     return $response->withHeader('Content-Type', 'application/json');
 });
 
+$app->post('/atualiza-foto-cliente', function ($request, $response, $args) {
+    $headersJson = json_encode($request->getHeaders());
+    $headers = json_decode($headersJson);
+
+    $json = $request->getBody();
+    $data = json_decode($json);
+
+    if ($headers->authorization) {
+        $auth = new Authenticate();
+        $jwt = $headers->authorization[0];
+        $validacao = $auth->decodeJWT(jwt: json_decode($jwt));
+
+        if ($validacao instanceof \Firebase\JWT\ExpiredException) {
+            $response->getBody()->write(json_encode([
+                "msg" => "Token expirado"
+            ]));
+            return $response->withStatus(401);
+        }
+        if ($validacao instanceof \Firebase\JWT\SignatureInvalidException) {
+            $response->getBody()->write(json_encode([
+                "token" => json_decode($headers->authorization[0]),
+                "msg" => "Erro de assinatura"
+            ]));
+            return $response->withStatus(401);
+        }
+        if ($validacao instanceof Throwable) {
+            $response->getBody()->write($validacao->getMessage());
+            return $response->withStatus(500);
+        }
+
+        if ($validacao->id) {
+            $id = $validacao->id;
+            $controller = new ClienteController();
+            $result = $controller->atualizaFoto(id: $id, foto: $data->foto,);
+            if ($result instanceof Throwable) {
+                $erro = [
+                    "message" => $result->getMessage()
+                ];
+                $response->getBody()->write(json_encode($erro));
+                return $response->withStatus(500);
+            }
+
+            if ($result["message"]) {
+                if ($result["status"] == "error") {
+                    $jsonResponse = json_encode($result);
+                    $response->getBody()->write($jsonResponse);
+                    return $response->withStatus(500);
+                } else if ($result["status"] == "success") {
+                    $jsonResponse = json_encode($result);
+                    $response->getBody()->write($jsonResponse);
+                    return $response->withStatus(202);
+                }
+            }
+            if (!$result) {
+                $result['message'] = 'Ocorreu um erro';
+                $jsonResponse = json_encode($result);
+                $response->getBody()->write($jsonResponse);
+                return $response->withStatus(500);
+            }
+        }
+    }
+
+    return $response->withHeader('Content-Type', 'application/json');
+});
+
+$app->post('/atualiza-cliente', function ($request, $response, $args) {
+    $headersJson = json_encode($request->getHeaders());
+    $headers = json_decode($headersJson);
+
+    $json = $request->getBody();
+    $data = json_decode($json);
+
+    if ($headers->authorization) {
+        $auth = new Authenticate();
+        $jwt = $headers->authorization[0];
+        $validacao = $auth->decodeJWT(jwt: json_decode($jwt));
+
+        if ($validacao instanceof \Firebase\JWT\ExpiredException) {
+            $response->getBody()->write(json_encode([
+                "msg" => "Token expirado"
+            ]));
+            return $response->withStatus(401);
+        }
+        if ($validacao instanceof \Firebase\JWT\SignatureInvalidException) {
+            $response->getBody()->write(json_encode([
+                "token" => json_decode($headers->authorization[0]),
+                "msg" => "Erro de assinatura"
+            ]));
+            return $response->withStatus(401);
+        }
+        if ($validacao instanceof Throwable) {
+            $response->getBody()->write($validacao->getMessage());
+            return $response->withStatus(500);
+        }
+
+        if ($validacao->id) {
+            $id = $validacao->id;
+            $controller = new ClienteController();
+            $result = $controller->atualizaCliente($id, $data->email, $data->nome, $data->senha);
+            if ($result instanceof Throwable) {
+                $erro = [
+                    "message" => $result->getMessage()
+                ];
+                $response->getBody()->write(json_encode($erro));
+                return $response->withStatus(500);
+            }
+
+            if ($result["message"]) {
+                if ($result["status"] == "error") {
+                    $jsonResponse = json_encode($result);
+                    $response->getBody()->write($jsonResponse);
+                    return $response->withStatus(500);
+                } else if ($result["status"] == "success") {
+                    $jsonResponse = json_encode($result);
+                    $response->getBody()->write($jsonResponse);
+                    return $response->withStatus(202);
+                    return $response->withHeader('Content-Type', 'application/json');
+                }
+            }
+            if (!$result) {
+                $result['message'] = 'Ocorreu um erro';
+                $jsonResponse = json_encode($result);
+                $response->getBody()->write($jsonResponse);
+                return $response->withStatus(500);
+            }
+        }
+    }
+});
+
+$app->get('/busca-cliente', function ($request, $response, $args) {
+
+    $headersJson = json_encode($request->getHeaders());
+    $headers = json_decode($headersJson);
+    if ($headers->authorization) {
+        $auth = new Authenticate();
+        $jwt = $headers->authorization[0];
+        $validacao = $auth->decodeJWT(jwt: ($jwt));
+        if ($validacao instanceof \Firebase\JWT\ExpiredException) {
+            $response->getBody()->write(json_encode([
+                "msg" => "Token expirado"
+            ]));
+            return $response->withStatus(401);
+        }
+        if ($validacao instanceof \Firebase\JWT\SignatureInvalidException) {
+            $response->getBody()->write(json_encode([
+                "token" => json_decode($headers->authorization[0]),
+                "msg" => "Erro de assinatura"
+            ]));
+            $response->withStatus(401);
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+        if ($validacao instanceof Throwable) {
+            $response->getBody()->write($validacao->getMessage());
+            $response->withStatus(500);
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+
+        if ($validacao->id) {
+            $controller = new ClienteController();
+            $result = $controller->getCliente(id: $validacao->id);
+
+            if ($result instanceof Throwable) {
+                return $response->withStatus(500);
+            }
+
+            if ($result["status"]) {
+                if ($result["status"] == "error") {
+                    return $response->withStatus(500);
+                } else if ($result["status"] == "success") {
+                    $jsonResponse = json_encode($result);
+                    $response->getBody()->write($jsonResponse);
+                    return $response->withHeader('Content-Type', 'application/json');
+                }
+            }
+            if (!$result) {
+                $result['message'] = 'Ocorreu um erro';
+                $jsonResponse = json_encode($result);
+                $response->getBody()->write($jsonResponse);
+                $response->withStatus(500);
+                return $response->withHeader('Content-Type', 'application/json');
+            }
+        }
+    } else {
+        return $response->withStatus(401);
+    }
+});
 //horario
 $app->post('/agendar-horario', function ($request, $response, $args) {
     $headersJson = json_encode($request->getHeaders());

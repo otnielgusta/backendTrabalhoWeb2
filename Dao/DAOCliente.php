@@ -6,17 +6,57 @@ use PDO;
 
 class DAOCliente{
 
-    public function cadastro($cliente, $senha){
+    public function cadastro($id, $nome, $email, $senha){
         $pst = Conexao::getPreparedStatement('insert into cliente values(?, ?, ?, ?, ?);');
-        $pst -> bindValue(1, $cliente->id);
-        $pst -> bindValue(2, $cliente->nome);
-        $pst -> bindValue(3, $cliente->email);
+        $pst -> bindValue(1, $id);
+        $pst -> bindValue(2, $nome);
+        $pst -> bindValue(3, $email);
         $pst -> bindValue(4, $senha);
-        $pst -> bindValue(5, $cliente->foto);
+        $pst -> bindValue(5, "");
         $resultado = $pst->execute();
         return $resultado;
     }
 
+    public function atualizaFoto($id, $foto){
+        $pst = Conexao::getPreparedStatement("
+        update cliente set foto = ? where id = ?
+         ");
+        $pst -> bindValue(1, $foto);
+        $pst -> bindValue(2, $id);
+        $resultado = $pst->execute();
+        return $resultado;
+    }
+
+    public function atualizaClienteComSenha($id,  $email, $nome, $senha){
+        $pst = Conexao::getPreparedStatement("
+        update cliente set nome = ?, email = ?, senha = ? where id = ?
+         ");
+        $pst -> bindValue(1, $nome);
+        $pst -> bindValue(2, $email);
+        $pst -> bindValue(3, $senha);
+        $pst -> bindValue(4, $id);
+        $resultado = $pst->execute();
+        return $resultado;
+    }
+
+    public function atualizaClienteSemSenha($id, $email, $nome,){
+        $pst = Conexao::getPreparedStatement("
+        update cliente set nome = ?, email = ?  where id = ?
+         ");
+        $pst -> bindValue(1, $nome);
+        $pst -> bindValue(2, $email);
+        $pst -> bindValue(3, $id);
+        $resultado = $pst->execute();
+        return $resultado;
+    }
+
+    public function pegaEmail($id){
+        $pst = Conexao::getPreparedStatement('select email from cliente where id = ?;');
+        $pst -> bindValue(1, $id);
+        $pst->execute();
+        $usuario = $pst->fetch(PDO::FETCH_ASSOC);
+        return $usuario;
+    }
     public function verificaEmail($email){
         $pst = Conexao::getPreparedStatement('select count(id) as count from cliente where email = ?;');
         $pst -> bindValue(1, $email);
@@ -46,9 +86,9 @@ class DAOCliente{
         $cliente->foto = $result['foto'];
         return $cliente;
     }
+
 }
 
-    
     
 
 ?>

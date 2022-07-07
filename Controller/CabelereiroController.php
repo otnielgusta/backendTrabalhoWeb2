@@ -101,7 +101,7 @@ class CabelereiroController
                 $result = $dao->login(usuario: $email);
                 if (!$result) {
                     return [
-                        "message" => "Ocorreu um erro ao atualizar usuario login",
+                        "message" => "Ocorreu um erro ao atualizar usuario",
                         "status" => "error"
                     ];
                 }
@@ -133,7 +133,7 @@ class CabelereiroController
 
             if (!$response) {
                 return [
-                    "message" => "Ocorreu um erro ao atualizar usuario atualização",
+                    "message" => "Ocorreu um erro ao atualizar usuario",
                     "status" => "error"
                 ];
             }
