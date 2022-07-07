@@ -95,7 +95,7 @@ class ClienteController
                     ];
                 }
             }
-<<<<<<< HEAD
+
 
             if ($senha == "" || $senha == null) {
                 $response = $dao->atualizaClienteSemSenha($id, $email, $nome);
@@ -108,12 +108,7 @@ class ClienteController
                     $senha_criptografada = $senha;
                 }
                 $response = $dao->atualizaClienteComSenha($id, $email, $nome, $senha_criptografada);
-=======
-            $senha_criptografada = md5($senha);
-            $wasReg = $dao->cadastro(cliente: $cliente, senha: $senha_criptografada);
-            if ($wasReg) {
-                $result['message'] = 'ok';
->>>>>>> 31f89bbbf33ad336d47aad16c1ed4e14a768c68d
+
             }
 
             if (!$response) {
